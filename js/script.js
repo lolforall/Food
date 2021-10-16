@@ -94,4 +94,45 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     setClock('.timer', deadline);
+
+    // Modal
+
+    const modalOpen = document.querySelectorAll('[data-modal]'),
+          modalClose = document.querySelector('[data-close]'),
+          modal = document.querySelector('.modal');
+// вариант через стили
+    // function showModal() {
+    //     modal.style.display = 'block';
+    // }
+
+    function closeModal() {
+        modal.classList.toggle('show');
+        document.body.style.overflow = ''; 
+    }
+
+// вариант через добавленные классы для табов
+    modalOpen.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // modal.classList.add('show');
+            // modal.classList.remove('hide');
+            modal.classList.toggle('show');
+            document.body.style.overflow = 'hidden'; // запрет скрола при открытом окне
+        });
+    });
+
+    modalClose.addEventListener('click', closeModal); 
+    
+    // закрытия модалки при клике на оверфлоу
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+// закрытие окна по нажатию клавиши
+    document.addEventListener('keydown', (e) => {
+        if (e.code === "Escape" && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
 });
