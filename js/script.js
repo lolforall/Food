@@ -105,19 +105,22 @@ window.addEventListener('DOMContentLoaded', () => {
     //     modal.style.display = 'block';
     // }
 
+// вариант через добавленные классы для табов
+    function openModal() {
+        // modal.classList.add('show');
+        // modal.classList.remove('hide');
+        modal.classList.toggle('show');
+        document.body.style.overflow = 'hidden'; // запрет скрола при открытом окне
+        clearInterval(modalTimerId); // обнуление интервала если пользователь открыл окно сам
+    }
+
     function closeModal() {
         modal.classList.toggle('show');
         document.body.style.overflow = ''; 
     }
 
-// вариант через добавленные классы для табов
     modalOpen.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // modal.classList.add('show');
-            // modal.classList.remove('hide');
-            modal.classList.toggle('show');
-            document.body.style.overflow = 'hidden'; // запрет скрола при открытом окне
-        });
+        btn.addEventListener('click', openModal);
     });
 
     modalClose.addEventListener('click', closeModal); 
@@ -135,4 +138,18 @@ window.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }
     });
+
+    const modalTimerId = setTimeout(openModal, 15000); // открытие модалки через 15 сек после загр страницы
+
+// вызов модалки, когда пользователь проскролил сайт до конца
+// логика: когда сумма высот отлистаной части сайта (сверху) + видимого клиентом контента станет больше либо равной
+// полной высоте скролла всей страницы - значит пользователь долистал сайт до конца => показать модалку
+    function showModalByScroll() {
+        if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+            openModal();
+            window.removeEventListener('scroll', showModalByScroll); // удалить обработчик после 1-го выполнения
+        }
+    }
+
+    window.addEventListener('scroll', showModalByScroll);
 });
