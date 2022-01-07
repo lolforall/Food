@@ -227,4 +227,67 @@ window.addEventListener('DOMContentLoaded', () => {
         '.menu .container',
         'menu__item'
     ).render();
+
+    // Forms
+    
+    // получаем все формы
+    const forms = document.querySelectorAll('form');
+    
+
+    // объект с сообщениями для пользователя
+    const message = {
+        loading: 'Загрузка',
+        success: 'Спасибо! Мы свяжемся с Вами в ближайшее время',
+        failure: 'Что-то пошло не так...'
+    };
+
+    // перебор форм и вызов функции с отправкой данных из форм на сервер
+    forms.forEach(item => {
+        postData(item);
+    });
+
+    // функция отправки данных
+    function postData(form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // создание и размещение блока с сообщением пользователю
+            const statusMessage = document.createElement('div');
+            statusMessage.classList.add('status');
+            statusMessage.textContent = message.loading;
+            form.append(statusMessage);
+            // создание POST запроса
+            const request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+            // создание объекта FormData и помещение в него данных из формы
+            // при использовании XMLHttpRequest+FormData ЗАГОЛОВОК НЕ УСТАНАВЛИВАЕТСЯ ВРУЧНУЮ
+            // request.setRequestHeader('Content-type', 'multipart/form-data'); <---- НЕ НУЖНО
+            // При работе с форматом JSON заголовок НУЖЕН --->
+            request.setRequestHeader('Content-type', 'application/json');
+            const formData = new FormData(form);
+
+            // преобразование FormData в объект и затем в JSON
+            const object = {};
+            formData.forEach(function(value, key){
+                object[key] = value;
+            });
+
+            const json = JSON.stringify(object);
+
+            request.send(json); // при работе с FormData передаем сюда const formData
+            
+            // сообщения об успешной отправке или ошибке
+            request.addEventListener('load', () => {
+                if (request.status === 200) {
+                    console.log(request.response);
+                    statusMessage.textContent = message.success;
+                    form.reset(); // сброс формы после успешной отправки данных
+                    setTimeout(() => { // удалить сообщение дня пользователя через 2 секунды
+                        statusMessage.remove();
+                    }, 2000);
+                } else {
+                    statusMessage.textContent = message.failure;
+                }
+            });
+        });
+    }
 });
