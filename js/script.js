@@ -98,7 +98,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // Modal
 
     const modalOpen = document.querySelectorAll('[data-modal]'),
-          modalClose = document.querySelector('[data-close]'),
           modal = document.querySelector('.modal');
 // вариант через стили
     // function showModal() {
@@ -107,15 +106,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // вариант через добавленные классы для табов
     function openModal() {
-        // modal.classList.add('show');
-        // modal.classList.remove('hide');
-        modal.classList.toggle('show');
+        modal.classList.add('show');
+        modal.classList.remove('hide');
+        // modal.classList.toggle('show');
         document.body.style.overflow = 'hidden'; // запрет скрола при открытом окне
         clearInterval(modalTimerId); // обнуление интервала если пользователь открыл окно сам
     }
 
     function closeModal() {
-        modal.classList.toggle('show');
+        // modal.classList.toggle('show');
+        modal.classList.add('hide');
+        modal.classList.remove('show');
         document.body.style.overflow = ''; 
     }
 
@@ -123,11 +124,9 @@ window.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', openModal);
     });
 
-    modalClose.addEventListener('click', closeModal); 
-    
     // закрытия модалки при клике на оверфлоу
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
+        if (e.target === modal || e.target.getAttribute('data-close') == '') {
             closeModal();
         }
     });
@@ -274,20 +273,46 @@ window.addEventListener('DOMContentLoaded', () => {
             const json = JSON.stringify(object);
 
             request.send(json); // при работе с FormData передаем сюда const formData
-            
+
             // сообщения об успешной отправке или ошибке
             request.addEventListener('load', () => {
                 if (request.status === 200) {
                     console.log(request.response);
-                    statusMessage.textContent = message.success;
+                    showThanksModal(message.success);
                     form.reset(); // сброс формы после успешной отправки данных
-                    setTimeout(() => { // удалить сообщение дня пользователя через 2 секунды
+                    statusMessage.remove();
+                    /* setTimeout(() => { // удалить сообщение дня пользователя через 2 секунды
                         statusMessage.remove();
-                    }, 2000);
+                    }, 2000); */
                 } else {
-                    statusMessage.textContent = message.failure;
+                    showThanksModal(message.failure);
                 }
             });
         });
+    }
+
+    // замена сообщений для пользователя другим модальным окном с сообщением
+    function showThanksModal(message) {
+        const prevModalDialog = document.querySelector('.modal__dialog');
+
+        prevModalDialog.classList.add('hide');
+        openModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div data-close class="modal__close">&times;</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+
+        document.querySelector('.modal').append(thanksModal);
+        setTimeout(() => {
+            thanksModal.remove();
+            prevModalDialog.classList.add('show');
+            prevModalDialog.classList.remove('hide');
+            closeModal();
+        }, 5000);
     }
 });
