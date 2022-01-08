@@ -228,15 +228,18 @@ window.addEventListener('DOMContentLoaded', () => {
     ).render();
 
     // Forms
+    
     // получаем все формы
     const forms = document.querySelectorAll('form');
     
+
     // объект с сообщениями для пользователя
     const message = {
         loading: 'img/form/spinner.svg',
         success: 'Спасибо! Мы свяжемся с Вами в ближайшее время',
         failure: 'Что-то пошло не так...'
     };
+
     // перебор форм и вызов функции с отправкой данных из форм на сервер
     forms.forEach(item => {
         postData(item);
@@ -254,33 +257,39 @@ window.addEventListener('DOMContentLoaded', () => {
                 margin: 0 auto;
             `;
             form.insertAdjacentElement('afterend', statusMessage);
-
-            // создание formData
+            // создание POST запроса
+            const request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+            // создание объекта FormData и помещение в него данных из формы
+            // при использовании XMLHttpRequest+FormData ЗАГОЛОВОК НЕ УСТАНАВЛИВАЕТСЯ ВРУЧНУЮ
+            // request.setRequestHeader('Content-type', 'multipart/form-data'); <---- НЕ НУЖНО
+            // При работе с форматом JSON заголовок НУЖЕН --->
+            request.setRequestHeader('Content-type', 'application/json');
             const formData = new FormData(form);
+
             // преобразование FormData в объект и затем в JSON
             const object = {};
             formData.forEach(function(value, key){
                 object[key] = value;
             });
-             // создание POST запроса с использованием fetch()
-            fetch('server.php', {
-                method: "POST",
-                headers: {
-                    'Content-type': 'application/json'
-                },
-                body: JSON.stringify(object)
-            })
-            .then(data => data.text())
-            .then(data => {
-                console.log(data);
-                showThanksModal(message.success);
-                statusMessage.remove();
-            }) // сообщения об успешной отправке или ошибке
-            .catch(() => {
-                showThanksModal(message.failure);
-            })
-            .finally(() => {
-                form.reset(); // сброс формы после отправки данных
+
+            const json = JSON.stringify(object);
+
+            request.send(json); // при работе с FormData передаем сюда const formData
+
+            // сообщения об успешной отправке или ошибке
+            request.addEventListener('load', () => {
+                if (request.status === 200) {
+                    console.log(request.response);
+                    showThanksModal(message.success);
+                    form.reset(); // сброс формы после успешной отправки данных
+                    statusMessage.remove();
+                    /* setTimeout(() => { // удалить сообщение дня пользователя через 2 секунды
+                        statusMessage.remove();
+                    }, 2000); */
+                } else {
+                    showThanksModal(message.failure);
+                }
             });
         });
     }
@@ -309,4 +318,16 @@ window.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }, 5000);
     }
+
+// пример формирования запросов к серверу с использованием fetch()
+    // fetch('https://jsonplaceholder.typicode.com/posts', {
+    //     method: "POST",
+    //     body: JSON.stringify({name: 'Alex'}),
+    //     headers: {
+    //         'Content-type': 'application/json'
+    //     }
+    // })
+    // .then(response => response.json())
+    // .then(json => console.log(json));
+
 });
